@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+	<script type="text/javascript" src='utils.js'></script>
+	<style type="text/css">
+		.container {
+			width: 500px;
+			
+		}
+	</style>
+</head>
+<body>
+	<div class="container"></div>
+	<canvas id="mycanvas" width=600 height=800></canvas>
+	<script type="text/javascript">
+
+		function Ball(){
+			this.init.apply(this,arguments)
+		}
+
+		Ball.prototype = {
+			init:function(x,y,radius){
+				this.x = x||0;
+				this.y = y||0;
+				this.radius = radius||30;
+			},
+			draw:function(context){
+				//console.log(this.x)
+				var _x = this.x,
+				_y = this.y,
+				_radius = this.radius;
+				context.fillStyle = '#ff0000';
+				context.beginPath();
+				context.arc(_x,_y,_radius,0,2*Math.PI,false);
+				context.fill()
+			}
+		}
+
+		var canvas = document.getElementById('mycanvas');
+		if(canvas.getContext){
+			var context = canvas.getContext('2d');
+			var ball = new Ball();
+			var xspeed = 1;
+			(function drawFrame(){
+				ball.x += xspeed;
+				ball.y = canvas.height/2
+				window.requestAnimationFrame(drawFrame,canvas);
+				context.clearRect(0,0,canvas.width,canvas.height);	
+				if(ball.x>canvas.width+ball.radius){
+	                ball.x = -ball.radius;
+	            }
+				ball.draw(context)
+			})()
+		}
+	</script>
+</body>
+</html>
