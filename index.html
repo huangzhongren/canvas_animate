@@ -13,45 +13,93 @@
 </head>
 <body>
 	<div class="container"></div>
-	<canvas id="mycanvas" width=600 height=800></canvas>
+	<canvas id="mycanvas" width=800 height=600></canvas>
 	<script type="text/javascript">
-
-		function Ball(){
+	
+		function Snake(){
 			this.init.apply(this,arguments)
 		}
 
-		Ball.prototype = {
-			init:function(x,y,radius){
-				this.x = x||0;
-				this.y = y||0;
-				this.radius = radius||30;
+		Snake.prototype = {
+			/*
+			@params opts：{
+				x:蛇头x轴起始位置，
+				y:y轴起始位置
+				radius:蛇头半径
+				length:蛇整体的长度（由几块组成）
+			*/
+			init:function(opts){
+				var _DEF_ = {
+					x:0,
+					y:canvas.height/2,
+					radius:30,
+					length:6
+				}
+				Object.assign(this,_DEF_,opts);//todo 兼容性处理
+				this.path = [];//存放snake的每一时刻运动状态
+				this.body = new Array(this.length);
+				//初始化蛇身
+				for(var i=0;i<this.length;i++){
+					this.draw(this.x-2*i*this.radius,y)
+				}
 			},
-			draw:function(context){
-				//console.log(this.x)
+			render:function(context){
 				var _x = this.x,
 				_y = this.y,
 				_radius = this.radius;
-				context.fillStyle = '#ff0000';
+				this.path.push([_x,_y])
+				context.fillStyle = "#ccc";
+				context.fillRect(0,0,canvas.width,canvas.height);
+				
+			},
+			draw: function(context,x,y,speed_x,speed_y){//画蛇的某一块
+				context.fillStyle = "#f00";
 				context.beginPath();
-				context.arc(_x,_y,_radius,0,2*Math.PI,false);
-				context.fill()
+				context.arc(x,y,this.radius,0,2*Math.PI,false);
+				context.fill();
 			}
 		}
 
+		var startPoint = [];
 		var canvas = document.getElementById('mycanvas');
+
 		if(canvas.getContext){
 			var context = canvas.getContext('2d');
-			var ball = new Ball();
-			var xspeed = 1;
+			
+			var snake = new Snake();
+			var speed = 1,
+			speed_x = speed,
+			speed_y = 0;
+			//添加事件
+			canvas.addEventListener('touchstart',function(e){
+				var T_evt = e.touches[0];
+				startPoint[0] = T_evt.clientX;
+				startPoint[1] = T_evt.clientY;
+
+			})
+			canvas.addEventListener('touchmove',function(e){
+				var T_evt = e.touches[0],
+				T_x = T_evt.clientX - startPoint[0],
+				T_y = T_evt.clientY - startPoint[1],
+				sin = T_y/Math.sqrt(T_x*T_x+T_y*T_y),//正弦值
+				cos = T_x/Math.sqrt(T_x*T_x+T_y*T_y);//余弦值
+				speed_y = speed*sin,
+				speed_x = speed*cos;
+			});
+
 			(function drawFrame(){
-				ball.x += xspeed;
-				ball.y = canvas.height/2
 				window.requestAnimationFrame(drawFrame,canvas);
 				context.clearRect(0,0,canvas.width,canvas.height);	
-				if(ball.x>canvas.width+ball.radius){
-	                ball.x = -ball.radius;
+				snake.x += speed_x;
+				snake.y += speed_y;
+				//如果撞到墙壁即死亡
+				if(snake.x+snake.radius>canvas.width){
+	                console.log('你已死亡')
 	            }
-				ball.draw(context)
+	            if(snake.y+snake.radius>canvas.height){
+	                console.log('你已死亡')
+	            }
+				snake.draw(context)
 			})()
 		}
 	</script>
