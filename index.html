@@ -16,6 +16,15 @@
 	<canvas id="mycanvas" width=800 height=600></canvas>
 	<script type="text/javascript">
 	
+
+		function Block(o){
+			function B(){};
+			B.prototype = o;
+			return new B();
+		}
+
+
+
 		function Snake(){
 			this.init.apply(this,arguments)
 		}
@@ -37,28 +46,60 @@
 				}
 				Object.assign(this,_DEF_,opts);//todo 兼容性处理
 				this.path = [];//存放snake的每一时刻运动状态
-				this.body = new Array(this.length);
-				//初始化蛇身
+				this.body = new Array();
+
+				//初始化蛇身,起点，初始速度
+				var b_x = this.x,
+				b_y = this.y,
+				b_speed_x = 1,
+				b_speed_y = 0;
 				for(var i=0;i<this.length;i++){
-					this.draw(this.x-2*i*this.radius,y)
+					var o = {
+						x:b_x-2*i*this.radius,
+						y:b_y,
+						x_speed:b_speed_x,
+						y_speed:b_speed_y
+					}
+					this.body.push(Block(o))
 				}
 			},
 			render:function(context){
 				var _x = this.x,
 				_y = this.y,
 				_radius = this.radius;
-				this.path.push([_x,_y])
+				//存入蛇头运动轨迹
+				this.path.push([_x,_y]);
 				context.fillStyle = "#ccc";
 				context.fillRect(0,0,canvas.width,canvas.height);
+
+				var path = this.path,
+				start = path[0],
+				that = this,
+				length;
+				this.body.forEach(function(o,i){
+					if(o.x<start.x){
+						o.x += o.x_speed;
+						o.y += o.y_speed;
+					}else{
+						if(length){
+							length = path.length
+						}
+						o.x = path[path.length-length][0];
+						o.y = path[path.length-length][1]
+					}
+					that.draw(context,o)
+				})
 				
 			},
-			draw: function(context,x,y,speed_x,speed_y){//画蛇的某一块
+			draw: function(context,o){//画蛇的某一块
 				context.fillStyle = "#f00";
 				context.beginPath();
-				context.arc(x,y,this.radius,0,2*Math.PI,false);
+				context.arc(o.x,o.y,this.radius,0,2*Math.PI,false);
 				context.fill();
 			}
 		}
+
+
 
 		var startPoint = [];
 		var canvas = document.getElementById('mycanvas');
@@ -92,6 +133,7 @@
 				context.clearRect(0,0,canvas.width,canvas.height);	
 				snake.x += speed_x;
 				snake.y += speed_y;
+
 				//如果撞到墙壁即死亡
 				if(snake.x+snake.radius>canvas.width){
 	                console.log('你已死亡')
@@ -99,7 +141,7 @@
 	            if(snake.y+snake.radius>canvas.height){
 	                console.log('你已死亡')
 	            }
-				snake.draw(context)
+				snake.render(context)
 			})()
 		}
 	</script>
